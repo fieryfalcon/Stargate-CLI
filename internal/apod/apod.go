@@ -3,16 +3,23 @@ package apod
 import (
 	"encoding/json"
 	"fmt"
+	"image"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"stargate/pkg/models"
 	"stargate/pkg/utils"
-	"io"
-	"runtime"
 	"strings"
-	"io/ioutil"
+	"syscall"
+	"unsafe"
+
+	"image/jpeg"
+
+	_ "image/png"
 )
 
 const apiURL = "https://api.nasa.gov/planetary/apod"
@@ -78,26 +85,81 @@ func OpenImage(filePath string) error {
 	return cmd.Start()
 }
 
-// SetWallpaper sets an image as the wallpaper
-func SetWallpaper(filePath string) error {
-	var cmd *exec.Cmd
+var (
+	procSystemParametersInfo = syscall.NewLazyDLL("user32.dll").NewProc("SystemParametersInfoW")
+)
 
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = exec.Command("osascript", "-e", fmt.Sprintf("tell application \"Finder\" to set desktop picture to POSIX file \"%s\"", filePath))
-	case "windows":
-		cmd = exec.Command("reg", "add", "HKEY_CURRENT_USER\\Control Panel\\Desktop", "/v", "Wallpaper", "/t", "REG_SZ", "/d", filePath, "/f")
-		cmd = exec.Command("RUNDLL32.EXE", "user32.dll,UpdatePerUserSystemParameters")
-	case "linux":
-		cmd = exec.Command("gsettings", "set", "org.gnome.desktop.background", "picture-uri", "file://"+filePath)
-	default:
-		return fmt.Errorf("unsupported platform")
+const (
+	SPI_SETDESKWALLPAPER = 20
+)
+
+// ConvertToJPEG converts the image to JPEG format
+func ConvertToJPEG(src, dst string) error {
+	file, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return err
 	}
 
-	return cmd.Run()
+	outFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	return jpeg.Encode(outFile, img, nil)
 }
 
-// CopyToFavorites copies an image to the favorites folder
+func SetWallpaper(filePath string) error {
+	// Ensure the image is in a supported format (JPEG)
+	jpegPath := filepath.Join(filepath.Dir(filePath), "wallpaper.jpg")
+	if err := ConvertToJPEG(filePath, jpegPath); err != nil {
+		fmt.Println("Failed to convert image to JPEG:", err)
+		return err
+	}
+
+	// Use absolute path for the wallpaper file
+	absolutePath, err := filepath.Abs(jpegPath)
+	if err != nil {
+		fmt.Println("Error getting absolute path:", err)
+		return err
+	}
+
+	// Set the wallpaper using SystemParametersInfoW
+	_, _, err = procSystemParametersInfo.Call(
+		uintptr(SPI_SETDESKWALLPAPER),
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(absolutePath))),
+		0,
+	)
+	if err != syscall.Errno(0) {
+		fmt.Println("Failed to set wallpaper:", err)
+		return err
+	}
+
+	// Update the Windows registry to ensure the change is reflected
+	cmd := exec.Command("reg", "add", "HKEY_CURRENT_USER\\Control Panel\\Desktop", "/v", "Wallpaper", "/t", "REG_SZ", "/d", absolutePath, "/f")
+	if err := cmd.Run(); err != nil {
+		fmt.Println("Failed to update registry:", err)
+		return err
+	}
+
+	// Refresh the desktop to apply the change
+	cmd = exec.Command("RUNDLL32.EXE", "user32.dll,UpdatePerUserSystemParameters", "1", "True")
+	if err := cmd.Run(); err != nil {
+		fmt.Println("Failed to refresh desktop:", err)
+		return err
+	}
+
+	fmt.Println("Wallpaper set successfully to:", absolutePath)
+	return nil
+}
+
 func CopyToFavorites(src, dst string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {

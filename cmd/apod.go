@@ -102,7 +102,7 @@ func init() {
 			}
 			fmt.Println("Title:", apodData.Title)
 			fmt.Println("Date:", apodData.Date)
-			fmt.Println("URL:", apodData.URL)
+			// fmt.Println("URL:", apodData.URL)
 			fmt.Println("Explanation:", apodData.Explanation)
 		}
 	}
