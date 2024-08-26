@@ -27,7 +27,6 @@ func FetchUpcomingLaunches() (*models.RocketLaunchResponse, error) {
 	return &launches, nil
 }
 
-// CheckForTodayLaunches checks if there is any launch scheduled for today
 func CheckForTodayLaunches(launches *models.RocketLaunchResponse) {
 	today := time.Now().Format("2006-01-02")
 
@@ -36,7 +35,21 @@ func CheckForTodayLaunches(launches *models.RocketLaunchResponse) {
 		if launch.WinOpen != "" {
 			launchDate := launch.WinOpen[:10]
 			if launchDate == today {
-				fmt.Printf("Today's Launch: %s - %s\n", launch.Name, launch.LaunchDescription)
+				fmt.Printf("ID: %d | Today's Launch: %s - %s\n", launch.ID, launch.Name, launch.LaunchDescription)
+			}
+		}
+	}
+}
+
+func CheckForTomorrowLaunches(launches *models.RocketLaunchResponse) {
+	tomorrow := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+
+	fmt.Println("Checking for launches tomorrow...")
+	for _, launch := range launches.Result {
+		if launch.WinOpen != "" {
+			launchDate := launch.WinOpen[:10]
+			if launchDate == tomorrow {
+				fmt.Printf("ID: %d | Tomorrow's Launch: %s - %s\n", launch.ID, launch.Name, launch.LaunchDescription)
 			}
 		}
 	}

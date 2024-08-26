@@ -7,17 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var UpcomingCmd = &cobra.Command{
-	Use:   "upcoming",
-	Short: "Get upcoming rocket launches",
+var TomorrowCmd = &cobra.Command{
+	Use:   "tomorrow",
+	Short: "Check if there are any launches scheduled for tomorrow",
 	Run: func(cmd *cobra.Command, args []string) {
 		launches, err := rocket.FetchUpcomingLaunches()
 		if err != nil {
 			fmt.Println("Error fetching upcoming launches:", err)
 			return
 		}
-		for _, launch := range launches.Result {
-			fmt.Printf("ID: %d | %s - %s (%s)\n", launch.ID, launch.Name, launch.LaunchDescription, launch.DateStr)
-		}
+		rocket.CheckForTomorrowLaunches(launches)
 	},
 }
