@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const rocketLaunchAPI = "https://fdo.rocketlaunch.live/json/launches/next/10"
+const rocketLaunchAPI = "https://fdo.rocketlaunch.live/json/launches/next/5"
 
 // FetchUpcomingLaunches fetches the upcoming rocket launches
 func FetchUpcomingLaunches() (*models.RocketLaunchResponse, error) {
@@ -27,32 +27,38 @@ func FetchUpcomingLaunches() (*models.RocketLaunchResponse, error) {
 	return &launches, nil
 }
 
-func CheckForTodayLaunches(launches *models.RocketLaunchResponse) {
+// CheckForTodayLaunches checks if there is any launch scheduled for today
+func CheckForTodayLaunches(launches *models.RocketLaunchResponse) []models.RocketLaunch {
 	today := time.Now().Format("2006-01-02")
 
 	fmt.Println("Checking for launches today...")
+	var todayLaunches []models.RocketLaunch
 	for _, launch := range launches.Result {
 		if launch.WinOpen != "" {
 			launchDate := launch.WinOpen[:10]
 			if launchDate == today {
-				fmt.Printf("ID: %d | Today's Launch: %s - %s\n", launch.ID, launch.Name, launch.LaunchDescription)
+				todayLaunches = append(todayLaunches, launch)
 			}
 		}
 	}
+	return todayLaunches
 }
 
-func CheckForTomorrowLaunches(launches *models.RocketLaunchResponse) {
+// CheckForTomorrowLaunches checks if there is any launch scheduled for tomorrow
+func CheckForTomorrowLaunches(launches *models.RocketLaunchResponse) []models.RocketLaunch {
 	tomorrow := time.Now().Add(24 * time.Hour).Format("2006-01-02")
 
 	fmt.Println("Checking for launches tomorrow...")
+	var tomorrowLaunches []models.RocketLaunch
 	for _, launch := range launches.Result {
 		if launch.WinOpen != "" {
 			launchDate := launch.WinOpen[:10]
 			if launchDate == tomorrow {
-				fmt.Printf("ID: %d | Tomorrow's Launch: %s - %s\n", launch.ID, launch.Name, launch.LaunchDescription)
+				tomorrowLaunches = append(tomorrowLaunches, launch)
 			}
 		}
 	}
+	return tomorrowLaunches
 }
 
 // SetReminderForLaunch sets a reminder for a particular launch

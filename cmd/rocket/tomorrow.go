@@ -3,7 +3,7 @@ package rocket
 import (
 	"fmt"
 	"stargate/internal/rocket"
-
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +16,28 @@ var TomorrowCmd = &cobra.Command{
 			fmt.Println("Error fetching upcoming launches:", err)
 			return
 		}
-		rocket.CheckForTomorrowLaunches(launches)
+
+		header := color.New(color.FgCyan, color.Bold).PrintfFunc()
+		highlight := color.New(color.FgGreen).PrintfFunc()
+		detail := color.New(color.FgWhite).PrintfFunc()
+
+		header("Tomorrow's Rocket Launches:\n\n")
+
+		tomorrow := rocket.CheckForTomorrowLaunches(launches)
+		if len(tomorrow) == 0 {
+			color.Red("No launches scheduled for tomorrow.\n")
+			return
+		}
+
+		for _, launch := range tomorrow {
+			highlight("ID: %d | %s\n", launch.ID, launch.Name)
+			detail("  Launch Description: %s\n", launch.LaunchDescription)
+			detail("  Provider: %s\n", launch.Provider.Name)
+			detail("  Vehicle: %s\n", launch.Vehicle.Name)
+			detail("  Launch Pad: %s, %s, %s\n", launch.Pad.Name, launch.Pad.Location.State, launch.Pad.Location.Country)
+			detail("  Date: %s\n", launch.DateStr)
+			detail("  More Info: https://rocketlaunch.live/launch/%s\n", launch.Slug)
+			fmt.Println()  // Add a blank line between launches
+		}
 	},
 }
