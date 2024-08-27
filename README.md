@@ -40,7 +40,7 @@ For Windows users, Stargate can be easily installed using [Chocolatey](https://c
    stargate --version
 
 
-### Mac Users
+### Mac Users ( Yet to be Tested )
 
 For Linux and macOS users, you can install Stargate using a custom installation script.
 
