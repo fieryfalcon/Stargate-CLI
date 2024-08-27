@@ -49,7 +49,7 @@ For Linux and macOS users, you can install Stargate using a custom installation 
 2. Run the following command to download and install Stargate:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/yourusername/stargate/main/install-stargate.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/fieryfalcon/stargate/main/install-stargate.sh | bash
 
 3. Verify the installation by :
 
