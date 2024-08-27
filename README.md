@@ -8,14 +8,6 @@ Stargate is a versatile command-line interface (CLI) tool designed to provide sp
 - [Installation](#installation)
   - [Windows Installation via Chocolatey](#windows-installation-via-chocolatey)
   - [Linux/macOS Installation via Script](#linuxmacos-installation-via-script)
-- [Usage](#usage)
-  - [APOD Commands](#apod-commands)
-  - [Rocket Launch Commands](#rocket-launch-commands)
-- [Examples](#examples)
-  - [Viewing the APOD](#viewing-the-apod)
-  - [Setting a Rocket Launch Reminder](#setting-a-rocket-launch-reminder)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -63,3 +55,4 @@ For Linux and macOS users, you can install Stargate using a custom installation 
 
    ```bash
    stargate --version
+
