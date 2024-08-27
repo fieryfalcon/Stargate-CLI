@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>stargate</id>
+    <version>1.0.0</version>
+    <title>Stargate CLI</title>
+    <authors>Your Name</authors>
+    <owners>Your Name</owners>
+    <description>A CLI tool for space updates and more.</description>
+    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
+    <projectUrl>https://github.com/yourusername/stargate</projectUrl>
+    <tags>CLI space tools</tags>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>

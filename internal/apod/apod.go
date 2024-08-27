@@ -38,6 +38,36 @@ func FetchTodayAPOD() (*models.APODResponse, error) {
 	}
 	return &apod, nil
 }
+
+func DetermineFileType(url string) string {
+	// Check for common image extensions
+	if strings.HasSuffix(url, ".jpg") || strings.HasSuffix(url, ".jpeg") || strings.HasSuffix(url, ".png") || strings.HasSuffix(url, ".gif") || strings.HasSuffix(url, ".bmp") {
+		return "image"
+	}
+
+	// Check for common video platforms or extensions
+	if strings.Contains(url, "youtube.com") || strings.Contains(url, "vimeo.com") || strings.HasSuffix(url, ".mp4") || strings.HasSuffix(url, ".mov") {
+		return "video"
+	}
+
+	// If the file type is not obvious, try to fetch the content type from the URL
+	resp, err := http.Head(url)
+	if err != nil {
+		return "unknown"
+	}
+	contentType := resp.Header.Get("Content-Type")
+
+	// Check the content type header
+	if strings.HasPrefix(contentType, "image/") {
+		return "image"
+	}
+	if strings.HasPrefix(contentType, "video/") {
+		return "video"
+	}
+
+	return "unknown"
+}
+
 func DownloadAPODAndSave(url, date string) error {
 	resp, err := http.Get(url)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"stargate/pkg/models"
 	"stargate/pkg/utils"
+	"strings"
 	"time"
 )
 
@@ -61,25 +62,46 @@ func CheckForTomorrowLaunches(launches *models.RocketLaunchResponse) []models.Ro
 	return tomorrowLaunches
 }
 
+func processDateTime(input string) (string, string) {
+	// Step 1: Remove the last character
+	if len(input) > 0 {
+		input = input[:len(input)-1]
+	}
+
+	// Step 2: Split the string at the 'T' character if it exists
+	parts := strings.Split(input, "T")
+	date := parts[0]
+	timePart := ""
+	if len(parts) > 1 {
+		timePart = parts[1]
+	}
+
+	// Convert date from "yyyy-mm-dd" to "dd/mm/yyyy"
+	parsedDate, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		fmt.Println("Error parsing date:", err)
+		return "", ""
+	}
+	formattedDate := parsedDate.Format("02/01/2006")
+
+	return formattedDate, timePart
+}
+
 // SetReminderForLaunch sets a reminder for a particular launch
 func SetReminderForLaunch(launchID int, launches *models.RocketLaunchResponse) {
 	for _, launch := range launches.Result {
 		if launch.ID == launchID {
 			fmt.Printf("Setting a reminder for launch: %s on %s\n", launch.Name, launch.WinOpen)
 
-			// Parse the launch time using RFC3339
-			launchTime, err := time.Parse(time.RFC3339, launch.WinOpen)
-			if err != nil {
-				fmt.Println("Error parsing launch time:", err)
-				return
-			}
+			// Use the processDateTime function to get the formatted date and time
+			startDate, startTime := processDateTime(launch.WinOpen)
 
 			// Set the task name and message
 			taskName := fmt.Sprintf("RocketLaunchReminder_%d", launchID)
-			message := fmt.Sprintf("Reminder: Rocket launch '%s' is scheduled for %s", launch.Name, launchTime.Format("2006-01-02 15:04:05"))
+			message := fmt.Sprintf("Reminder: Rocket launch '%s' is scheduled for %s", launch.Name, launch.WinOpen)
 
 			// Schedule the task using schtasks
-			err = scheduleTask(taskName, message, launchTime)
+			err := scheduleTask(taskName, message, startTime, startDate)
 			if err != nil {
 				fmt.Println("Error setting reminder:", err)
 				return
@@ -93,12 +115,9 @@ func SetReminderForLaunch(launchID int, launches *models.RocketLaunchResponse) {
 }
 
 // scheduleTask creates a scheduled task in Windows to show a reminder message at the specified time
-func scheduleTask(taskName, message string, launchTime time.Time) error {
-	// Convert time to the required format for schtasks (HH:mm yyyy/MM/dd)
-	taskTime := launchTime.Format("15:04 2006/01/02")
-
+func scheduleTask(taskName, message, startTime, startDate string) error {
 	// Build the schtasks command to create the task
-	cmd := exec.Command("schtasks", "/Create", "/TN", taskName, "/TR", fmt.Sprintf("msg * /time:60 \"%s\"", message), "/SC", "ONCE", "/ST", taskTime)
+	cmd := exec.Command("schtasks", "/Create", "/TN", taskName, "/TR", fmt.Sprintf("msg * /time:60 \"%s\"", message), "/SC", "ONCE", "/ST", startTime, "/SD", startDate)
 
 	// Run the command
 	output, err := cmd.CombinedOutput()
